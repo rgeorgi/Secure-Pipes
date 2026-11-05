@@ -58,6 +58,7 @@
 - (IBAction)tableClicked:(NSOutlineView *)sender;
 - (IBAction)editClicked:(NSButton *)sender;
 - (void) expandList;
+- (BOOL)showErrorForConnectionUUID:(NSString *)connectionUUID;
 - (IBAction)filterClicked:(id)sender;
 
 @property (strong) IBOutlet NSButton *minusButton;

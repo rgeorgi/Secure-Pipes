@@ -8,8 +8,12 @@
 
 #import "NESController.h"
 #import "NESUser.h"
+#import <UserNotifications/UserNotifications.h>
 
 static const int NESConnectionRestartDelay = 30;
+
+@interface NESController () <UNUserNotificationCenterDelegate>
+@end
 
 @implementation NESController
 
@@ -36,6 +40,19 @@ static const int NESConnectionRestartDelay = 30;
         _appConfig = [[NESAppConfig alloc] init];
         [_appConfig loadConfig];
         
+        UNUserNotificationCenter *notificationCenter = [UNUserNotificationCenter currentNotificationCenter];
+        notificationCenter.delegate = self;
+        if ([[_appConfig configForKey:@"useNotificationCenter"] boolValue]) {
+            [notificationCenter requestAuthorizationWithOptions:(UNAuthorizationOptionAlert | UNAuthorizationOptionSound)
+                                              completionHandler:^(BOOL granted, NSError *error) {
+                if (error) {
+                    NSLog(@"Unable to request notification authorization: %@", error);
+                } else {
+                    NSLog(@"Connection notifications %@", granted ? @"authorized" : @"not authorized");
+                }
+            }];
+        }
+
         _connectionManager = [[NESConnectionManager alloc] initWithConnections:_connections];
         [_connectionManager setAppConfig:_appConfig];
         if ([[_appConfig configForKey:@"enableManagedConnections"] boolValue]) {
@@ -376,7 +393,6 @@ static const int NESConnectionRestartDelay = 30;
     if ([connection status] == oldStatus)
         return;
 
-    NSUserNotification *notification = [[NSUserNotification alloc] init];
     NSString *title, *subtitle, *type;
     
     switch ([connection type]) {
@@ -399,21 +415,24 @@ static const int NESConnectionRestartDelay = 30;
     switch ([connection status]&CONNECTION_STATE_MASK) {
         case NESConnectionConnected:
             title = @"Secure Connection Successful";
-            subtitle = [NSString stringWithFormat:@"The %@ connection \"%@\" connected successfully.",type,[connection name]];
+            subtitle = [NSString stringWithFormat:@"The %@ connection \"%@\" connected successfully. ✅",type,[connection name]];
             break;
         case NESConnectionAuthenticationFailed:
             title = @"Secure Connection Failure";
-            subtitle = [NSString stringWithFormat:@"The %@ connection \"%@\" failed to connect (Permission denied).",type,[connection name]];
+            subtitle = [NSString stringWithFormat:@"The %@ connection \"%@\" failed to connect (Permission denied). ❌",type,[connection name]];
             break;
         case NESConnectionError:
             title = @"Secure Connection Failure";
             if (oldStatus&NESConnectionConnected) {
-                subtitle = [NSString stringWithFormat:@"The %@ connection \"%@\" unexpectedly disconnected.",type,[connection name]];                
+                subtitle = [NSString stringWithFormat:@"The %@ connection \"%@\" unexpectedly disconnected. ❌",type,[connection name]];
             } else {
-                subtitle = [NSString stringWithFormat:@"The %@ connection \"%@\" failed to connect.",type,[connection name]];
+                subtitle = [NSString stringWithFormat:@"The %@ connection \"%@\" failed to connect. ❌",type,[connection name]];
             }
             break;
         case NESConnectionIdle:
+            if (!(oldStatus & NESConnectionConnected)) {
+                return;
+            }
             title = @"Secure Connection Disconnected";
             subtitle = [NSString stringWithFormat:@"The %@ connection \"%@\" was disconnected.",type,[connection name]];
             break;
@@ -423,13 +442,55 @@ static const int NESConnectionRestartDelay = 30;
             return;
             break;
     }
-    [notification setTitle:title];
-    [notification setInformativeText:subtitle];
-    [notification setHasActionButton:NO];
-    [notification setHasReplyButton:NO];
-        
-    [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:notification];
-    
+    UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];
+    content.title = title;
+    content.body = subtitle;
+    content.sound = [UNNotificationSound defaultSound];
+
+    if (([connection status] & CONNECTION_STATE_MASK) == NESConnectionError) {
+        NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+        NSString *connectionUUID = [connection configForKey:@"UUID"];
+        NSString *errorMessage = [connection statusForKey:@"message"];
+        if (connectionUUID) {
+            [userInfo setObject:connectionUUID forKey:@"connectionUUID"];
+        }
+        if (errorMessage) {
+            [userInfo setObject:errorMessage forKey:@"errorMessage"];
+        }
+        content.userInfo = userInfo;
+    }
+
+    NSString *identifier = [[NSUUID UUID] UUIDString];
+    UNNotificationRequest *request = [UNNotificationRequest requestWithIdentifier:identifier
+                                                                          content:content
+                                                                          trigger:nil];
+    [[UNUserNotificationCenter currentNotificationCenter] addNotificationRequest:request
+                                                           withCompletionHandler:^(NSError *error) {
+        if (error) {
+            NSLog(@"Unable to deliver connection notification: %@", error);
+        }
+    }];
+
+}
+
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+       willPresentNotification:(UNNotification *)notification
+         withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler {
+    completionHandler(UNNotificationPresentationOptionBanner | UNNotificationPresentationOptionSound);
+}
+
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+ didReceiveNotificationResponse:(UNNotificationResponse *)response
+          withCompletionHandler:(void (^)(void))completionHandler {
+    if ([response.actionIdentifier isEqualToString:UNNotificationDefaultActionIdentifier]) {
+        NSDictionary *userInfo = response.notification.request.content.userInfo;
+        NSString *connectionUUID = userInfo[@"connectionUUID"];
+        NSString *errorMessage = userInfo[@"errorMessage"];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [_appDelegate showErrorForConnectionUUID:connectionUUID errorMessage:errorMessage];
+        });
+    }
+    completionHandler();
 }
 
 - (void) updateMenuForStatus:(NESConnection *) connection {

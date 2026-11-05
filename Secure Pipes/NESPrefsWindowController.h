@@ -29,4 +29,6 @@
 @property (strong) NESAppConfig *appConfig;
 @property (strong) NESConnectionManager *connectionManager;
 
+- (BOOL)showErrorForConnectionUUID:(NSString *)connectionUUID;
+
 @end

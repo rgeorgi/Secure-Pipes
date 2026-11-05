@@ -11,6 +11,7 @@
 
 #import "NESGeneralViewController.h"
 #import <SystemConfiguration/SystemConfiguration.h>
+#import <UserNotifications/UserNotifications.h>
 
 @interface NESGeneralViewController ()
 
@@ -175,6 +176,15 @@
         if ([_allowSavePasswordCheckBox integerValue] == NSOffState) {
           [NESKeychain removeKeyChainItem:APP_NAME andType:0];
         }
+    } else if ((sender == _useNotificationCenterCheckBox) && ([_useNotificationCenterCheckBox integerValue] == NSOnState)) {
+        [[UNUserNotificationCenter currentNotificationCenter] requestAuthorizationWithOptions:(UNAuthorizationOptionAlert | UNAuthorizationOptionSound)
+                                                                             completionHandler:^(BOOL granted, NSError *error) {
+            if (error) {
+                NSLog(@"Unable to request notification authorization: %@", error);
+            } else {
+                NSLog(@"Connection notifications %@", granted ? @"authorized" : @"not authorized");
+            }
+        }];
     } else if (sender == _enableMangedConnectionsCheckBox) {
         [self setManagedConnectionFields];
         [self controlTextDidEndEditing:nil];

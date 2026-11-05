@@ -125,6 +125,11 @@
     return [self toolbarAllowedItemIdentifiers: toolbar ];
 }
 
+- (BOOL)showErrorForConnectionUUID:(NSString *)connectionUUID {
+    [self setPrefsView:nil];
+    return [_connectionViewController showErrorForConnectionUUID:connectionUUID];
+}
+
 - (void) setPrefsView: (id) sender
 {
     NSString *ident = (sender == nil)?TOOLBAR_CONNECTIONS:[sender itemIdentifier];

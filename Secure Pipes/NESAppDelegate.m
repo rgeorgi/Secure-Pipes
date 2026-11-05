@@ -49,6 +49,18 @@
     
 }
 
+- (void)showErrorForConnectionUUID:(NSString *)connectionUUID errorMessage:(NSString *)errorMessage {
+    [self showPrefsWindow:self];
+
+    if (![_prefsWindowController showErrorForConnectionUUID:connectionUUID] && [errorMessage length] > 0) {
+        NSAlert *alert = [[NSAlert alloc] init];
+        [alert setMessageText:@"Connection Error"];
+        [alert setInformativeText:errorMessage];
+        [alert addButtonWithTitle:@"OK"];
+        [alert beginSheetModalForWindow:[_prefsWindowController window] completionHandler:nil];
+    }
+}
+
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender {
     
     [_controller fastStopAllConnections];

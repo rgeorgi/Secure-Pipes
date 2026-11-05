@@ -158,6 +158,32 @@
 //    }
 }
 
+- (BOOL)showErrorForConnectionUUID:(NSString *)connectionUUID {
+    NESConnection *connection = [_rootContents findConnectionWithUUID:connectionUUID];
+    if (!connection || !([connection status] & NESConnectionError)) {
+        return NO;
+    }
+
+    NESConnection *container = [connection parent];
+    if (container) {
+        [_outlineView expandItem:container];
+    }
+
+    [self selectConnection:connection];
+    NSInteger row = [_outlineView rowForItem:connection];
+    if (row < 0) {
+        return NO;
+    }
+
+    NESConnectionCellView *cellView = (NESConnectionCellView *)[_outlineView viewAtColumn:0 row:row makeIfNecessary:YES];
+    if (!cellView || [cellView.infoPopupButton isHidden]) {
+        return NO;
+    }
+
+    [self showErrorPopup:cellView.infoPopupButton];
+    return YES;
+}
+
 - (void) showFilterBarIfNeeded {
     
     if ([_rootContents hasManagedConnections] && [_rootContents hasUnManagedConnections]) {

@@ -28,4 +28,6 @@
 @property (readonly, strong, nonatomic) NSManagedObjectModel *managedObjectModel;
 @property (readonly, strong, nonatomic) NSManagedObjectContext *managedObjectContext;
 
+- (void)showErrorForConnectionUUID:(NSString *)connectionUUID errorMessage:(NSString *)errorMessage;
+
 @end
