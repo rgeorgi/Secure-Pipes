@@ -60,7 +60,7 @@ array set err {
     connection_refused {Error 15 Description "SSH connection refused."}
     local_authorization_failed {Error 16 Description "This connection requires administrative privileges to start. Please retry the connection and supply valid administrative credentials."}
     invalid_local_forward {Error 17 Description "Invalid local forward specification."}
-    address_already_in_use {Error 18 Description "Requested bind address is already in use."}
+    address_already_in_use {Error 18 Description "The local forwarding port is already in use. Stop the other process or tunnel using that port, or choose a different local port."}
     local_authorization_unknown {Error 19 Description "Unknown failure doing local authorization."}
     cannot_bind_address {Error 20 Description "Cannot bind to requested address." }
     connection_timed_out { Error 21 Description "Remote connection timed out." }
@@ -126,7 +126,7 @@ proc send_passwd {} {
         "Permission denied" { exit_script $err(permission_denied) }
         -re "Connection to.*timed out while wa" {exit_script $err(connection_timed_out) }
         "Bad local forwarding specification" { exit_script $err(invalid_local_forward) }
-        -re "bind: Address already in us.*\n" { exit_script $err(address_already_in_use) }
+        -re "Address already in use" { exit_script $err(address_already_in_use) }
         -re "bind: Can't assign requested address" { exit_script $err(cannot_bind_address) }
         -re "Error: remote port forwarding failed for listen port (\n+)" {
             set port $expect_out(1,string)
@@ -384,6 +384,7 @@ proc connect {} {
             "Could not resolve" { exit_script $err(cannot_resolve_host) }
             "timed out" { exit_script $err(operation_timed_out) }
             "Warning: remote port forwarding failed" { exit_script $err(remote_bind_failed) }
+            -re "Address already in use" { exit_script $err(address_already_in_use) }
             "Connection closed" { exit_script $err(connection_closed) }
             "Connection timed out" { exit_script $err(connection_timed_out) }
             "Connection reset by peer" { exit_script $err(connection_reset) }

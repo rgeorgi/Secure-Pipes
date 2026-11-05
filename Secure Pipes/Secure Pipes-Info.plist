@@ -32,6 +32,8 @@
 	<true/>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2014-2020 Timothy Stonis. All rights reserved.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Secure Pipes connects to SSH servers on your local network to create secure tunnels and SOCKS proxies.</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>

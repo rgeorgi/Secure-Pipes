@@ -321,6 +321,7 @@
             
         case NESConnectionProxy:
         case NESConnectionManagedProxy:
+            configFile = [configFile stringByAppendingString:@"ExitOnForwardFailure yes\r\n"];
             configFile = [configFile stringByAppendingFormat:@"DynamicForward %@:%@\r\n",[connection configForKey:@"localBindAddress"],[connection configForKey:@"localBindPort"]];
             break;
             
