@@ -361,7 +361,7 @@
         
         [cellView.serverName setStringValue:[item verboseDescription:NO]];
         [cellView.serverName setToolTip:[item verboseDescription:NO]];
-        [cellView.statusLight setImage:[NESConnection imageForStatus:(NESConnectionStatus)[item status]]];
+        [cellView.statusLight setImage:[item statusImage]];
         
         if (([item status]&NESConnectionUpdatingConfig)&&([cellView.infoPopupButton isHidden])) {
             [cellView.busyIndicator setHidden:NO];

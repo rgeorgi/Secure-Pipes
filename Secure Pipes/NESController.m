@@ -230,7 +230,7 @@ static const int NESConnectionRestartDelay = 30;
     
     // Looks a little cleaner without the indentation.
     //[newItem setIndentationLevel:1];
-    [newItem setImage:[NESConnection imageForStatus:[connection status]]];
+    [newItem setImage:[connection statusImage]];
     [newItem setEnabled:YES];
     [newItem setTitle:[self menuName:connection forStatus:[connection status]]];
     [newItem setAction:@selector(toggleConnection:)];
@@ -496,7 +496,7 @@ static const int NESConnectionRestartDelay = 30;
 - (void) updateMenuForStatus:(NESConnection *) connection {
     NSMenuItem *menuItem = [self getMenuForConnection:connection];
 
-    [menuItem setImage:[NESConnection imageForStatus:[connection status]]];
+    [menuItem setImage:[connection statusImage]];
     [menuItem setTitle:[self menuName:connection forStatus:[connection status]]];
     [_iconController setMenuForConnections:_connections];
 }

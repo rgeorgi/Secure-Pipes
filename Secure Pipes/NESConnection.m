@@ -719,6 +719,14 @@
     
 }
 
+- (NSImage *)statusImage {
+    NESConnectionStatus displayStatus = [self status];
+    if (_reconnecting && (displayStatus & CONNECTION_STATE_MASK) == NESConnectionIdle) {
+        displayStatus = (displayStatus & ~CONNECTION_STATE_MASK) | NESConnectionConnecting;
+    }
+    return [NESConnection imageForStatus:displayStatus];
+}
+
 + (NSImage *) imageForStatus:(NESConnectionStatus) status {
 
     NSImage *image;

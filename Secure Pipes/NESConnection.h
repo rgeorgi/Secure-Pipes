@@ -109,6 +109,7 @@ typedef NS_ENUM(NSInteger, NESConnectionStatus) {
 - (BOOL) needsSavedAdministratorPasswd;
 - (BOOL) isManaged;
 - (BOOL) isActive;
+- (NSImage *)statusImage;
 
 + (NSUInteger) indexForInserting:(NESConnection *)conn inArray:(NSArray *)array;
 + (BOOL) isValidIP:(NSString *) ipAddress;
